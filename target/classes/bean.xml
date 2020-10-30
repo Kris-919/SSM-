@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-4.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+    <!--导入名称空间: xmlns:p="http://www.springframework.org/schema/p"-->
+
+    <context:component-scan base-package="com.bean">
+    </context:component-scan>
+
+    <!-- 注册Person对象,Spring会自动创建该对象 -->
+    <!-- ,一个bean可以注册一个组件(对象和类),class为要注册的组件的全类名,id为该对象的唯一标识 -->
+    <bean id="person01" class="com.bean.Person.Person">
+        <property name="lastName" value="张三"></property>
+        <property name="age" value="19"></property>
+        <property name="email" value="1292840734@qq.com"></property>
+        <property name="sex" value="男"></property>
+        <!-- property为对象属性赋值,name为属性名,value为属性值 -->
+        <!--
+        该方法是通过Person对象中的set方法去赋值的,若改变set方法的名称,则对应的name属性中的值也需要改变
+        如: setEmail方法改为setEmail9,则name中的值需要从email改为email9
+         -->
+    </bean>
+    <bean id="person02" class="com.bean.Person.Person">
+        <constructor-arg name="lastName" value="Tom"></constructor-arg>
+        <constructor-arg name="age" value="18"></constructor-arg>
+        <constructor-arg name="email" value="1998229@163.com"></constructor-arg>
+        <constructor-arg name="sex" value="男"></constructor-arg>
+    </bean>
+    <bean id="person03" class="com.bean.Person.Person">
+        <!-- index:参数在构造器中的下标  type:参数的类型 -->
+        <constructor-arg value="139832@163.com" index="3" type="java.lang.String"></constructor-arg>
+        <constructor-arg value="19" index="1"></constructor-arg>
+        <constructor-arg value="Alice" index="0"></constructor-arg>
+        <constructor-arg value="女" index="2"></constructor-arg>
+    </bean>
+    <bean id="person04" class="com.bean.Person.Person" p:age="18" p:email="1827@gmail.com" p:lastName="Smith" p:sex="男">
+    </bean>
+    <bean id="person05" class="com.bean.Person.Person">
+        <property name="lastName">
+            <!--
+            当Person类中的某个属性已经赋了一个值,在创建时想要给该属性赋空值时,
+            不能在value属性中赋值,若在value中赋值null,会使该属性值为字符串null,而不是空
+            要赋较复杂的值时,需要在property标签内赋值
+            -->
+            <null/>
+        </property>
+        <!-- 引用内部bean,即创建一个对象 -->
+        <property name="car">
+            <bean id="car02" class="com.bean.Person.Car" p:color="red" p:name="S" p:price="10000"></bean>
+        </property>
+    </bean>
+    <bean id="person06" class="com.bean.Person.Person">
+        <!-- 引用外部bean,引用外部bean时不能引用其它Person类中的car,即内部bean,只能引用不属于任何类中的Car对象,ref属性为引用外部的对象 -->
+        <property name="car" ref="car01"></property>
+    </bean>
+
+    <bean id="car01" class="com.bean.Person.Car">
+        <property name="color" value="green"></property>
+        <property name="name" value="M"></property>
+        <property name="price" value="100000"></property>
+    </bean>
+    <!-- util可以被所有bean对象引用 -->
+    <util:list id="myList">
+        <value>3</value>
+        <value>4</value>
+    </util:list>
+    <!-- parent属性:指定当前bean的配置信息继承于哪个对象,指的是配置信息,而不是对象 -->
+    <bean id="person07" class="com.bean.Person.Person" parent="person03"></bean>
+    <!-- abstract属性: 使该对象的配置只能被继承,不能获取实例 -->
+    <bean id="person08" class="com.bean.Person.Person" abstract="true"></bean>
+    <!--
+    depends-on属性: 该标签只限制了对象创建的先后顺序,同时可以依赖多个对象,它们之间用逗号隔开即可,
+    要创建一个对象时,该对象依赖的对象会被先创建,而后才会创建它本身,如创建person09对象时,会先创建car01对象,而后才会创建person09对象
+     -->
+    <bean id="person09" class="com.bean.Person.Person" depends-on="car01"></bean>
+    <!--
+     scope属性: bean的作用域,用于指定单实例和多实例的bean
+     prototype:多实例   多实例时容器创建时不会创建对象,要获取的时候才会创建,且每次创建都会创建一个新的实例
+     singleton:单实例,默认为单实例  单实例在容器启动完成之前就已经创建好对象,保存在容器中
+     -->
+    <bean id="person10" class="com.bean.Person.Person" scope="prototype"></bean>
+
+    <!--
+    工厂模式:有一个专门的类帮我们创建对象,这个类即工厂类
+    静态工厂: 无需创建工厂对象,通过工厂类的静态方法调用即可,即 对象=工厂类名.方法名();
+    eg: Book book=BookFactory.createBook();
+    实例工厂: 需要创建工厂对象,然后调用该对象中的方法创建
+    eg: BookFactory bookFactory=new BookFactory(); Book book=bookFactory.createBook();
+    -->
+    <!-- 静态工厂
+    factory-method:指定哪个方法是工厂方法  class:指定的是工厂的全类名,而不是要创建的实例的全类名   constructor-arg: 为方法传参
+     -->
+    <bean id="book01" class="com.bean.factory.BookStaticFactory" factory-method="createBook">
+        <constructor-arg value="西游记"/>
+    </bean>
+    <!-- 实例工厂
+    先配置出实例工厂对象,然后再配置我们要创建的实例由哪个工厂创建
+    factory-bean: 指定使用哪个工厂实例
+    factory-method: 指定使用哪个工厂方法
+     -->
+    <bean id="bookInstanceFactory" class="com.bean.factory.BookInstanceFactory">
+    </bean>
+    <bean id="book02" class="com.bean.Person.Book" factory-bean="bookInstanceFactory" factory-method="createBook">
+        <constructor-arg value="三国"/>
+    </bean>
+
+    <!-- FactoryBean是Spring规定的一个接口,只要是这个接口的实现类,Spring都认为是一个工厂
+     ioc容器启动时,不会创建实例,只有获取的时候才会创建,无论该工厂类创建的实例是单实例还是多实例
+     -->
+    <bean id="factoryBean" class="com.bean.factory.FactoryBeanImpl" >
+    </bean>
+
+    <!-- Bean的生命周期
+     销毁方法:destroy-method  初始化方法:init-method
+     单例: 调用构造器(容器启动)->初始化方法->销毁方法(容器关闭)
+     多例: 获取bean(构造器->初始化方法)->容器关闭,不会调用销毁方法
+     -->
+    <!--autowire: 基于xml的自动装配(自动赋值),仅限于自定义类型,没有String,Integer等基本类型
+     default/no:不自动赋值
+     byName: 以属性名作为id值去容器中查找这个组件,给这个属性赋值,比如,属性名为car,那么就会去容器中查找id=car的组件,然后为这个属性赋值
+     byType: 以属性的类型作为依据去容器中查找同类型的组件,给这个属性赋值,
+     比如,该属性的类型为Car类型的,那么会去容器中找Car类型的组件,如果有多个,则会报错
+     constructor: 根据构造器赋值,先按照有参构造器的类型进行装配,如果有多个构造器,则将它们的参数整合,
+     然后按照参数的类型进行装配(成功就赋值),没有就赋值为null,若找到了多个,则以参数的名作为id继续匹配,成功就赋值,若没有就赋值为null
+     -->
+    <bean id="book03" class="com.bean.Person.Book" autowire="constructor"></bean>
+
+    <!-- SpEL表达式,与EL表达式类似,但还可以调用静态和非静态方法
+    调用静态方法: #{T(全类名).静态方法名(参数列表)}
+    调用非静态方法:  #{对象.方法名(参数列表)}
+    -->
+    <bean id="book04" class="com.bean.Person.Book">
+        <!-- #{book03.price}等价于在bean标签中使用ref标签,即ref=book03 -->
+        <property name="price" value="#{book03.price}"></property>
+    </bean>
+
+    <!--Spring的四个注解
+    @Controller: 控制器,一般加给Servlet包下的组件
+    @Service: 业务逻辑,一般加给Service包下的组件
+    @Repository: 仓库,一般加给Dao包下的组件,即数据库层
+    @Component: 给不属于以上3层的包下的组件添加,如工具包
+
+    使用注解将组件快速加入到容器中的步骤(不用写bean来配置了)
+    (1)给要添加的组件加上以上四个注解中的任意一个
+    (2)加入下面一句话,让Spring自动添加组件
+
+    <context:component-scan base-package="com.bean">
+        <context:exclude-filter type="annotation" expression=""/>
+        <context:include-filter type="" expression=""/>
+    </context:component-scan>
+
+    context:component-scan: 自动扫描组件
+    base-package: 扫描指定的包,把该包及其含有的所有包和类都扫描,只要加了注解,就会自动加入到容器中
+    context:exclude-filter: 扫描时排除指定的组件
+    context:include-filter: 指定扫描时只需要扫描的组件,没有指定的不用扫描,使用该功能时,需要将use-default-filter属性设为false
+    即  <context:component-scan base-package="com.bean" use-default-filter=false></context:component-scan>
+    type:扫描时需要遵循的规则,有以下几种
+        (i)annotation:指定排除/只扫描含有某个注解的类
+        (ii)assignable:指定排除/只扫描某个具体的类
+        (iii)regex:指定排除/只扫描符合正则表达式规则的bean
+    expression: 规则的具体描述,与type搭配,
+    如type=annotation,expression=@Service,则扫描时排除/只扫描含有@Service注解的类
+    (3)必须导入aop包,该包支持加注解模式
+
+    自动导入容器中的bean的id默认为开头小写,如类名为Book,则id=book,且为单例
+    若要改为多例,则在相应的类上添加注解@Scope(value="prototype")
+    若要改id,如果注解为 @Service,则改为 @Service(新id名),如果注解为@Repository,则改为 @Repository(新id名)
+    -->
+
+    <!-- 容器自动扫描完毕后,若容器中含有某个类的实例后,当我们要在其它类中使用该类的实例对象时,不需要新建对象,只需要加一个@Autowired注解即可
+     eg:
+     @Autowired
+     private UserDao userDao;
+     若之前已经自动扫描了UserDao这个类,同时容器中含有该类的实例,则不需要新建对象也可以使用
+
+     @Autowired注解原理
+     先按照类型去容器中找相应的组件,若没找到则抛异常,找到一个则赋值,找到多个则按照变量名(userDao)为id继续匹配,若匹配不了则报错
+     使用注解 @Qualifier("指定id名") 可以指定新的id去查找,没找到则报错
+     若使用注解 @Autowired(required=false) 没找到时不会报错
+
+     若方法上有@Autowired注解,则方法中的每个参数都会自动注入值,参数注入符合上面@Autowired的注入规则,同时参数也可以注入注解
+     同时这个方法也会在它所属的实例创建时自动运行
+
+     @Autowired,@Resource,@Inject都是自动装配的注解,@Autowired是Spring规定的注解,@Resource是java规定的注解标准
+     @Resource扩展性更强,而@Autowired注解离开Spring框架就无效,而@Resource可以,但@Autowired功能更全面
+     -->
+
+    <!-- Spring可以使用带泛型的父类类型来确定这个子类的类型 -->
+
+</beans>
